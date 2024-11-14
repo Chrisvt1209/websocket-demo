@@ -1,3 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import { over } from 'stompjs';
+import SockJS from 'sockjs-client';
+import './App.css'
+
 let stompClient = null;
 
 const App = () => {
@@ -17,7 +22,7 @@ const App = () => {
     const connect = () => {
         const socket = new SockJS('http://localhost:8080/ws');
         stompClient = over(socket);
-        stompClient.connect({}, onConnected(), onError);
+        stompClient.connect({}, onConnected, onError);
     };
 
     const onConnected = () => {

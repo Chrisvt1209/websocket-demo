@@ -1,35 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+let stompClient = null;
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+    const[messages, setMessages] = useState([]);
+    const[userData, setUserData] = useState({
+        username:"",
+        connected: false,
+        message:""
+    });
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    useEffect(() => {
+        if (userData.connected) {
+            connect();
+        }
+    }, [userData.connected]);
 
-export default App
+    const connect = () => {
+        const socket = new SockJS('http://localhost:8080/ws');
+        stompClient = over(socket);
+        stompClient.connect({}, onConnected(), onError);
+    };
+
+    const onConnected = () => {
+        stompClient.subscribe('/topic/public', onMessageReceived);
+        stompClient.send('/app/chat.addUser', {}, JSON.stringify({sender: userData.username, type: 'JOIN'}));
+    };
+
+    const onError = (error) => {
+        console.error('Could not connect to WebSocket server. Please refresh this page to try again!', error);
+    };
+
+    const onMessageReceived = (payload) => {
+        const message = JSON.parse(payload.body);
+        setMessages((prevMessages) => [...prevMessages, message]);
+    };
+
+    const handleMessageChange = (event) => {
+        const { value } = event.target;
+        setUserData({...userData, message: value});
+    };
+
+    const sendMessage = () => {
+        if (stompClient) {
+            const chatMessage = {
+                sender: userData.username,
+                content: userData.message,
+                type: 'CHAT'
+            };
+            stompClient.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage));
+            setUserData({...userData, message: ""});
+        }
+    };
+
+    const handleUserNameChange = (event) => {
+        const { value } = event.target;
+        setUserData({...userData, username:  value});
+    };
+
+    const connectUser = () => {
+        setUserData({...userData, connected: true});
+    };
+
+    return (
+        <div className="container mt-5">
+            {userData.connected ? (
+                <div className="card">
+                    <div className="card-body">
+                        <ul className="list-group list-group-flush">
+                            {messages.map((msg, index) => (
+                                <li key={index} className={`list-group-item ${msg.type}`}>
+                                    <strong>{msg.sender}:</strong> {msg.content}
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="input-group mt-3">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Type a message..."
+                                value={userData.message}
+                                onChange={handleMessageChange}
+                            />
+                            <button className="btn btn-primary" onClick={sendMessage}>Send</button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="card">
+                    <div className="card-body">
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Enter your username"
+                                value={userData.username}
+                                onChange={handleUserNameChange}
+                            />
+                            <button className="btn btn-primary" onClick={connectUser}>Connect</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default App;

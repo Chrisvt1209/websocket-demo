@@ -3,8 +3,6 @@ import Stomp from 'stompjs';
 import SockJS from 'sockjs-client';
 import './App.css'
 
-let stompClient = null;
-
 const App = () => {
     const[messages, setMessages] = useState([]);
     const[userData, setUserData] = useState({
@@ -19,22 +17,28 @@ const App = () => {
         }
     }, [userData.connected]);
 
+    let stompClient = null;
+
     const connect = () => {
+        console.log('Attempting to connect to WebSocket...');
         const socket = new SockJS('http://localhost:8080/ws');
         stompClient = Stomp.over(socket);
+        console.log('WebSocket client initialized');
         stompClient.connect({}, onConnected, onError);
     };
 
     const onConnected = () => {
+        console.log('Connected to WebSocket');
         stompClient.subscribe('/topic/public', onMessageReceived);
         stompClient.send('/app/chat.addUser', {}, JSON.stringify({sender: userData.username, type: 'JOIN'}));
     };
 
     const onError = (error) => {
-        console.error('Could not connect to WebSocket server. Please refresh this page to try again!', error);
+        console.error('Error during WebSocket connection:', error);
     };
 
     const onMessageReceived = (payload) => {
+        console.log('Message received:', payload);
         const message = JSON.parse(payload.body);
         setMessages((prevMessages) => [...prevMessages, message]);
     };

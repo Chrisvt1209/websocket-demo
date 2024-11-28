@@ -8,12 +8,12 @@ import MessageList from "./components/MessageList.jsx";
 import MessageBox from "./components/MessageBox.jsx";
 import './App.css';
 
-const socket = SockJs("http://localhost:8080/chatroom", {}, {CheckOrigin: () => false});
-socket.onopen = () => {
+const socket = SockJs("http://localhost:8080/chatroom");
+socket.onOpen = () => {
     console.log('Connected to the server');
 };
 
-socket.onclose = () => {
+socket.onClose = () => {
     console.log('Disconnected from the server');
 };
 

@@ -1,4 +1,4 @@
-import SockJs from 'sockjs-client';
+import SockJs from 'sockjs-client/dist/sockjs';
 import {Stomp} from '@stomp/stompjs';
 import {useState} from "react";
 import PageHeader from "./components/PageHeader.jsx";
@@ -6,6 +6,7 @@ import UsernameComponent from "./components/UsernameComponent.jsx";
 import ConnectedUserList from "./components/ConnectedUserList.jsx";
 import MessageList from "./components/MessageList.jsx";
 import MessageBox from "./components/MessageBox.jsx";
+import './App.css';
 
 const socket = SockJs("http://localhost:8080/chatroom", {}, {CheckOrigin: () => false});
 socket.onopen = () => {

@@ -1,6 +1,5 @@
 export default (props) => {
-    const updatedUsername = props.updatedUsername;
-    const currentUsername = props.currentUsername;
+    const {updatedUsername, currentUsername} = props;
 
     return (
         <div>
